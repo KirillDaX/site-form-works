@@ -23,12 +23,14 @@ def cities_lookup(request):
 
     part_of_city = request.GET.get('term')
     pattern = f'^{part_of_city}.+'
-    all_cities = list(City.objects.select_related('name').values('name'))
-    cache.set('all_cities', all_cities, 300)
+    all_cities = list(City.objects.values('name'))
     city_list = []
-    for city in cache.get('all_cities'):
-        match = re.findall(pattern, city['name'])
-        if match:
-            city_list.append(city['name'])
+    if not cache.get('all_cities'):
+        cache.set('all_cities', all_cities, 300)
+    else:
+        for city in cache.get('all_cities'):
+            match = re.findall(pattern, city['name'])
+            if match:
+                city_list.append(city['name'])
     results = city_list
     return JsonResponse(results, safe=False)
